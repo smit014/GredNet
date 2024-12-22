@@ -1,0 +1,22 @@
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+class Config():
+    AWS_ACCESS_KEY_ID = os.environ["AWS_ACCESS_KEY_ID"]
+    AWS_SECRET_ACCESS_KEY = os.environ["AWS_SECRET_ACCESS_KEY"]
+    AWS_DEFAULT_REGION = os.environ["AWS_DEFAULT_REGION"]
+    SQLALCHEMY_DATABASE_URI = os.environ["SQLALCHEMY_DATABASE_URI"]
+    JWT_SECRET_KEY = os.environ["JWT_SECRET_KEY"]
+    ADMIN_SECRET_KEY = os.environ["ADMIN_SECRET_KEY"]
+    ACCESS_TOKEN_EXPIRE_DAYS = os.environ["ACCESS_TOKEN_EXPIRE_DAYS"]
+    REFRESH_TOKEN_EXPIRE_DAYS = os.environ["REFRESH_TOKEN_EXPIRE_DAYS"]
+    MAIL_HOST = os.environ["MAIL_HOST"]
+    MAIL_USERNAME = os.environ["MAIL_USERNAME"]
+    MAIL_PASSWORD = os.environ["MAIL_PASSWORD"]
+    MAIL_PORT = os.environ["MAIL_PORT"]
+    FORGET_PASSWORD_LINK = os.environ["FORGET_PASSWORD_LINK"]
+    ALGORITHM = os.environ["ALGORITHM"]
+    FORGET_PASSWORD_LINK_EXPIRE_MINUTES = os.environ["FORGET_PASSWORD_LINK_EXPIRE_MINUTES"]
+    FORGET_PWD_SECRET_KEY = os.environ["FORGET_PWD_SECRET_KEY"]
