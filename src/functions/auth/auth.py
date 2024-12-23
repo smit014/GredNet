@@ -52,27 +52,47 @@ def create_user(user_details, db: Session):
 
 
 def login_user(user_details, db: Session):
+    """
+    Authenticate a user using email or phone number and return a JWT token.
+    """
     email = user_details.get("email")
     phone_no = user_details.get("phone_no")
     password = user_details.get("password")
 
-    if email or phone_no:
-        user_data = (
-            db.query(User)
-            .filter(
-                or_((User.email == email), (User.phone_no == phone_no)),
-                User.is_active == True,
-                User.is_deleted == False,
-            )
-            .first()
-        )
-        if user_data:
-            if bcrypt_context.verify(password, user_data.password):
-                token = create_jwt_token(user_data.name, timedelta(days=7))
-                return JSONResponse({"access_token": token, "type": "bearer"})
-            else:
-                raise HTTPException(status_code=401, detail="Incorrect password")
-        else:
-            raise HTTPException(status_code=404, detail="User not found")
-    else:
+    # Ensure either email or phone number is provided
+    if not email and not phone_no:
         raise HTTPException(status_code=400, detail="Email or phone number is required")
+
+    # Query the user by email or phone number
+    user_data = (
+        db.query(User)
+        .filter(
+            or_(
+                (User.email == email), 
+                (User.phone_no == phone_no)
+            ),
+            User.is_active == True,
+            User.is_deleted == False,
+        )
+        .first()
+    )
+
+    # Check if the user exists
+    if not user_data:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Verify the provided password
+    if not bcrypt_context.verify(password, user_data.password):
+        raise HTTPException(status_code=401, detail="Incorrect password")
+
+    # Create the JWT token
+    token = create_jwt_token(
+        id=user_data.id,
+        name=user_data.name,
+        email=user_data.email,
+        phone_no=user_data.phone_no,
+        expires_delta=timedelta(days=7)
+    )
+
+    return JSONResponse({"access_token": token, "type": "bearer"})
+
