@@ -55,10 +55,10 @@ def login_user(user_details, db: Session):
     """
     Authenticate a user using email or phone number and return a JWT token.
     """
+    breakpoint()
     email = user_details.get("email")
     phone_no = user_details.get("phone_no")
     password = user_details.get("password")
-
     # Ensure either email or phone number is provided
     if not email and not phone_no:
         raise HTTPException(status_code=400, detail="Email or phone number is required")
@@ -67,10 +67,7 @@ def login_user(user_details, db: Session):
     user_data = (
         db.query(User)
         .filter(
-            or_(
-                (User.email == email), 
-                (User.phone_no == phone_no)
-            ),
+            or_(User.email == email, User.phone_no == phone_no),
             User.is_active == True,
             User.is_deleted == False,
         )
@@ -84,6 +81,7 @@ def login_user(user_details, db: Session):
     # Verify the provided password
     if not bcrypt_context.verify(password, user_data.password):
         raise HTTPException(status_code=401, detail="Incorrect password")
+
 
     # Create the JWT token
     token = create_jwt_token(
