@@ -1,7 +1,4 @@
-[phases.setup]
-commands = [
-  "apt-get update && apt-get install -y libpq-dev gcc"
-]
+
 
 [build]
 commands = [
