@@ -1,0 +1,12 @@
+[phases.setup]
+commands = [
+  "apt-get update && apt-get install -y libpq-dev gcc"
+]
+
+[build]
+commands = [
+  "pip install --no-cache-dir -r requirements.txt"
+]
+
+[start]
+command = "uvicorn src.main:app --host 0.0.0.0 --port 8000"
