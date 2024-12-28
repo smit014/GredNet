@@ -28,34 +28,37 @@ def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
 
         # Validate that all required fields are present
         if not id or not email or not phone_no:
-            raise HTTPException(
+            return JSONResponse(
                 status_code=401,
-                detail={
-                    "status": "Unauthorized",
+                content={
+                    "status": False,
                     "code": 401,
-                    "detail": "Invalid token: Missing required user information."
+                    "message": "Invalid token: Missing required user information.",
+                    "data":{}
                 }
             )
 
         # Return success response with user details
-        return {
+        return JSONResponse({
             "status": "Success",
             "code": 200,
+            "message": "Current user details.",
             "data": {
                 "id": id,
                 "name": name,
                 "email": email,
                 "phone_no": phone_no
             }
-        }
+        })
 
     except JWTError as e:
-        raise HTTPException(
+        return JSONResponse(
             status_code=401,
-            detail={
-                "status": "Unauthorized",
+            content={
+                "status": False,
                 "code": 401,
-                "detail": f"Token validation error: {str(e)}"
+                "message": f"Token validation error: {str(e)}",
+                "data":{}
             }
         )
 
@@ -66,18 +69,20 @@ def update_user_details(user_data, user_id, db: Session):
     Function to update user details in the database.
     """
     try:
+        id =user_id.get("data")
         user = (
             db.query(User)
-            .filter_by(id=user_id.get("id"), is_active=True, is_deleted=False)
+            .filter_by(id=id.get("id"), is_active=True, is_deleted=False)
             .first()
         )
         if not user:
-            raise HTTPException(
-                status_code=404,
-                detail={
-                    "status": "Not Found",
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "status": False,
                     "code": 404,
-                    "detail": "User not found"
+                    "message": "User not found",
+                    "data":{}
                 }
             )
 
@@ -96,12 +101,13 @@ def update_user_details(user_data, user_id, db: Session):
         return JSONResponse(
             status_code=200,
             content={
-                "status": "Success",
+                "status": True,
                 "code": 200,
                 "message": "User updated successfully",
                 "data": {
                     "id": user.id,
                     "name": user.name,
+                    "email": user.email,
                     "phone_no": user.phone_no,
                     "address": user.address,
                     "updated_at": user.updated_at.isoformat()
@@ -110,12 +116,13 @@ def update_user_details(user_data, user_id, db: Session):
         )
     except SQLAlchemyError as e:
         db.rollback()  # Rollback transaction in case of an error
-        raise HTTPException(
-            status_code=500,
-            detail={
-                "status": "Internal Server Error",
+        return JSONResponse(
+            status_code=200,
+            content={
+                "status": False,
                 "code": 500,
-                "detail": f"Database error: {str(e)}"
+                "message": f"Database error: {str(e)}",
+                "data":{}
             }
         )
 
@@ -126,14 +133,16 @@ def delete_user(user_id: str, current_user: dict, db: Session):
     Function to soft delete a user.
     """
     try:
+        current_user = current_user.get("data")
         # Ensure the user is deleting their own account
         if user_id != current_user.get("id"):
-            raise HTTPException(
+            return JSONResponse(
                 status_code=403,
-                detail={
-                    "status": "Forbidden",
+                content={
+                    "status": False,
                     "code": 403,
-                    "detail": "Unauthorized action"
+                    "message": "Unauthorized action",
+                    "data":{}
                 }
             )
 
@@ -145,12 +154,13 @@ def delete_user(user_id: str, current_user: dict, db: Session):
         )
 
         if not user_data:
-            raise HTTPException(
+            return JSONResponse(
                 status_code=404,
-                detail={
-                    "status": "Not Found",
+                content={
+                    "status": False,
                     "code": 404,
-                    "detail": "User not found"
+                    "message": "User not found",
+                    "data":{}
                 }
             )
 
@@ -164,7 +174,7 @@ def delete_user(user_id: str, current_user: dict, db: Session):
         return JSONResponse(
             status_code=200,
             content={
-                "status": "Success",
+                "status": True,
                 "code": 200,
                 "message": "User deleted successfully",
                 "data": {
@@ -178,11 +188,12 @@ def delete_user(user_id: str, current_user: dict, db: Session):
         )
     except SQLAlchemyError as e:
         db.rollback()  # Rollback transaction on failure
-        raise HTTPException(
+        return JSONResponse(
             status_code=500,
-            detail={
-                "status": "Internal Server Error",
+            content={
+                "status": False,
                 "code": 500,
-                "detail": f"Database error: {str(e)}"
+                "message": f"Database error: {str(e)}",
+                "data":{}
             }
         )

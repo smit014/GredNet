@@ -12,7 +12,7 @@ class User(Base):
     password = Column(VARCHAR(1024), nullable=False)
     address = Column(String(255), nullable=True)
     spid_no = Column(BigInteger, nullable=True)
-    is_organization = Column(Boolean, nullable=False)
+    # is_organization = Column(Boolean, nullable=False)
     is_verify = Column(Boolean, default=False)
     is_plus_member = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)

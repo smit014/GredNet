@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 
 class Token(BaseModel):
@@ -8,8 +8,8 @@ class Token(BaseModel):
 
 class UserRequest(BaseModel):
     name: str
-    phone_no: str
-    email: str
+    email: EmailStr
+    phone_no: str = Field(..., pattern="^\d{10}$")  # Ensures a valid 10-digit phone number
     password: str
     address: Optional[str]= None
 

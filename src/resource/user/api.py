@@ -24,6 +24,7 @@ def get_user(
     """
     Get user details for the authenticated user.
     """
+    current_user = current_user.get("data")
     # Query the database for user details using the username from the token
     user = db.query(User).filter(User.id == current_user.get("id")).first()
 

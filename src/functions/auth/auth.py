@@ -27,67 +27,86 @@ def get_db():
 def create_user(user_details, db: Session):
     try:
         id = str(uuid.uuid4())
+
+        # Validate email and phone number presence
         if not user_details.get("email") or not user_details.get("phone_no"):
-            raise HTTPException(
+            return JSONResponse(
                 status_code=422,
-                detail={
-                    "status": "Unprocessable Content",
+                content={
+                    "status": False,
                     "code": 422,
-                    "detail": "Add email or phone number",
-                },
-            )
-        if not user_details.get("password"):
-            raise HTTPException(
-                status_code=422,
-                detail={
-                    "status": "Unprocessable Content",
-                    "code": 422,
-                    "detail": "Password is required",
+                    "message": "Add email or phone number",
+                    "data":{}
                 },
             )
 
+        if not user_details.get("password"):
+            return JSONResponse(
+                status_code=422,
+                content={
+                    "status": False,
+                    "code": 422,
+                    "message": "Password is required",
+                    "data":{}
+                },
+            )
+
+        # Check for existing user
         existing_user = (
             db.query(User)
             .filter_by(email=user_details.get("email"), is_active=True)
             .first()
         )
         if existing_user:
-            raise HTTPException(
+            return JSONResponse(
                 status_code=403,
-                detail={
+                content={
+                    "status": False,
                     "code": 403,
-                    "detail": "Email is already used. Please log in or use another email.",
+                    "message": "Email is already used. Please log in or use another email.",
+                    "data":{}
                 },
             )
 
+        # Create new user
         user_info = User(
             id=id,
             name=user_details.get("name"),
             email=user_details.get("email"),
             phone_no=user_details.get("phone_no"),
             password=bcrypt_context.hash(user_details.get("password")),
+            address=user_details.get("address"),
         )
         db.add(user_info)
         db.commit()
+
         return JSONResponse(
             content={
-                "status": "Success",
+                "status": True,
                 "code": 201,
-                "detail": "User created successfully",
-                "data": {"user_id": str(id)},
+                "message": "User created successfully",
+                "data": {
+                    "user_id": id,
+                    "name": user_details.get("name"),
+                    "email": user_details.get("email"),
+                    "phone_no": user_details.get("phone_no"),
+                    "address": user_details.get("address"),
+                },
             },
             status_code=201,
         )
     except SQLAlchemyError as e:
         db.rollback()
-        raise HTTPException(
+        return JSONResponse(
             status_code=500,
-            detail={
-                "status": "Internal Server Error",
+            content={
+                "status": False,
                 "code": 500,
                 "detail": f"Database error: {str(e)}",
+                "data":{}
             },
         )
+
 
 
 def login_user(user_details, db: Session):
@@ -101,12 +120,13 @@ def login_user(user_details, db: Session):
 
         # Ensure either email or phone number is provided
         if not email and not phone_no:
-            raise HTTPException(
+            return JSONResponse(
                 status_code=400,
-                detail={
-                    "status": "Bad Request",
+                content={
+                    "status": False,
                     "code": 400,
-                    "detail": "Email or phone number is required",
+                    "message": "Email or phone number is required",
+                    "data":{}
                 },
             )
 
@@ -123,23 +143,25 @@ def login_user(user_details, db: Session):
 
         # Check if the user exists
         if not user_data:
-            raise HTTPException(
+            return JSONResponse(
                 status_code=404,
-                detail={
-                    "status": "Not Found",
+                content={
+                    "status": False,
                     "code": 404,
-                    "detail": "User not found",
+                    "message": "User not found",
+                    "data":{}
                 },
             )
 
         # Verify the provided password
         if not bcrypt_context.verify(password, user_data.password):
-            raise HTTPException(
+            return JSONResponse(
                 status_code=401,
-                detail={
-                    "status": "Unauthorized",
+                content={
+                    "status": False,
                     "code": 401,
-                    "detail": "Incorrect password",
+                    "message": "Incorrect password",
+                    "data":{}
                 },
             )
 
@@ -155,7 +177,7 @@ def login_user(user_details, db: Session):
         # Return success response with user details
         return JSONResponse(
             content={
-                "status": "Success",
+                "status": True,
                 "code": 200,
                 "detail": "Login successful",
                 "data": {
@@ -175,11 +197,12 @@ def login_user(user_details, db: Session):
             status_code=200,
         )
     except SQLAlchemyError as e:
-        raise HTTPException(
+        return JSONResponse(
             status_code=500,
-            detail={
-                "status": "Internal Server Error",
+            content={
+                "status":False,
                 "code": 500,
                 "detail": f"Database error: {str(e)}",
+                "data":{}
             },
         )
