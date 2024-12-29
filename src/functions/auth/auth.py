@@ -83,7 +83,7 @@ def create_user(user_details, db: Session):
         return JSONResponse(
             content={
                 "status": True,
-                "code": 201,
+                "code": 200,
                 "message": "User created successfully",
                 "data": {
                     "user_id": id,
@@ -93,7 +93,7 @@ def create_user(user_details, db: Session):
                     "address": user_details.get("address"),
                 },
             },
-            status_code=201,
+            status_code=200,
         )
     except SQLAlchemyError as e:
         db.rollback()
@@ -102,7 +102,7 @@ def create_user(user_details, db: Session):
             content={
                 "status": False,
                 "code": 500,
-                "detail": f"Database error: {str(e)}",
+                "message": f"Database error: {str(e)}",
                 "data":{}
             },
         )
@@ -179,7 +179,7 @@ def login_user(user_details, db: Session):
             content={
                 "status": True,
                 "code": 200,
-                "detail": "Login successful",
+                "message": "Login successful",
                 "data": {
                     "access_token": token,
                     "type": "bearer",
@@ -202,7 +202,7 @@ def login_user(user_details, db: Session):
             content={
                 "status":False,
                 "code": 500,
-                "detail": f"Database error: {str(e)}",
+                "message": f"Database error: {str(e)}",
                 "data":{}
             },
         )
