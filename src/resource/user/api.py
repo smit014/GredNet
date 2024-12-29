@@ -77,8 +77,3 @@ def delete_user_api(
         JSONResponse: Success or error message.
     """
     return delete_user(user_id=user_id, current_user=current_user, db=db)
-
-
-@user_router.get("/uuser",200)
-def demo_user():
-    return {"users": "List of users"}
