@@ -83,7 +83,7 @@ def create_user(user_details, db: Session):
         return JSONResponse(
             content={
                 "status": True,
-                "code": 201,
+                "code": 200,
                 "message": "User created successfully",
                 "data": {
                     "user_id": id,
@@ -93,7 +93,7 @@ def create_user(user_details, db: Session):
                     "address": user_details.get("address"),
                 },
             },
-            status_code=201,
+            status_code=200,
         )
     except SQLAlchemyError as e:
         db.rollback()
