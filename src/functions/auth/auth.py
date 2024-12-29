@@ -102,7 +102,7 @@ def create_user(user_details, db: Session):
             content={
                 "status": False,
                 "code": 500,
-                "detail": f"Database error: {str(e)}",
+                "message": f"Database error: {str(e)}",
                 "data":{}
             },
         )
@@ -179,7 +179,7 @@ def login_user(user_details, db: Session):
             content={
                 "status": True,
                 "code": 200,
-                "detail": "Login successful",
+                "message": "Login successful",
                 "data": {
                     "access_token": token,
                     "type": "bearer",
@@ -202,7 +202,7 @@ def login_user(user_details, db: Session):
             content={
                 "status":False,
                 "code": 500,
-                "detail": f"Database error: {str(e)}",
+                "message": f"Database error: {str(e)}",
                 "data":{}
             },
         )
