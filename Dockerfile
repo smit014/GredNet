@@ -1,23 +1,20 @@
 # Use an official Python runtime as the base image
-FROM python:3.13
+FROM python:3.13-slim
 
 # Set the working directory inside the container
 WORKDIR /app
 
-# Set PYTHONPATH to include the src directory
-ENV PYTHONPATH="/app/src"
-
-# Copy your dependency file (requirements.txt) into the container
+# Copy the requirements.txt file into the container
 COPY requirements.txt .
 
-# Install dependencies
+# Install the Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of your application code into the container
+# Copy the entire application code into the container
 COPY . .
 
-# Expose the port your app will run on (e.g., 8000 for FastAPI)
+# Expose the port your app will run on (e.g., 8000 for FastAPI or Flask)
 EXPOSE 8000
 
-# Specify the command to run your app
+# Command to run your application (adjust based on your entry point)
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
