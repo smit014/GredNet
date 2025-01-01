@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from src.functions.user.user import get_current_user
 from src.resource.auth.schema import UserRequest, UserLoginRequest, Token
@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 
 auth_router = APIRouter()
 
+
 # Dependency to get database session
 def get_db():
     db = Sessionlocal()
@@ -15,6 +16,7 @@ def get_db():
         yield db
     finally:
         db.close()
+
 
 @auth_router.post("/signup", status_code=201)
 def create_user_api(user_data: UserRequest, db: Session = Depends(get_db)):
@@ -55,16 +57,21 @@ def login_api(user_data: UserLoginRequest, db: Session = Depends(get_db)):
             },
         )
 
-#$ API to send OTP for SPID verification
+
+# $ API to send OTP for SPID verification
 @auth_router.post("/verify-user")
 def verify_user_api(spid_no: int, db: Session = Depends(get_db)):
-    
+
     return verify_user(spid_no, db)
 
-#$ API to verify OTP and update the user table.
+
+# $ API to verify OTP and update the user table.
 @auth_router.post("/verify-otp")
-def verify_otp_api(spid_no: int, otp: int, current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
-    """
-    
-    """
-    return verify_otp(spid_no, otp,current_user, db)
+def verify_otp_api(
+    spid_no: int,
+    otp: int,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """ """
+    return verify_otp(spid_no, otp, current_user, db)
