@@ -1,12 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from typing import Annotated
-from src.functions.user.user import get_current_user,update_user_details,delete_user
+from src.functions.user.user import get_current_user, update_user_details, delete_user
 from database.database import Sessionlocal
 from src.resource.user.model import User
 from src.resource.user.schema import UserUpdate
 
 user_router = APIRouter()
+
 
 # Dependency to get the database session
 def get_db():
@@ -16,10 +18,11 @@ def get_db():
     finally:
         db.close()
 
+
 @user_router.get("/get_user", status_code=200)
 def get_user(
-    current_user: Annotated[dict, Depends(get_current_user)], 
-    db: Session = Depends(get_db)
+    current_user: Annotated[dict, Depends(get_current_user)],
+    db: Session = Depends(get_db),
 ):
     """
     Get user details for the authenticated user.
@@ -29,7 +32,15 @@ def get_user(
     user = db.query(User).filter(User.id == current_user.get("id")).first()
 
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        return JSONResponse(
+            status_code=404,
+            content={
+                "status": False,
+                "code": 404,
+                "message": "User not found",
+                "data": {},
+            },
+        )
 
     # Return user details (excluding sensitive fields like password)
     return {
@@ -38,6 +49,7 @@ def get_user(
         "email": user.email,
         "phone_no": user.phone_no,
     }
+
 
 @user_router.put("/update_user", status_code=200)
 def update_user_api(

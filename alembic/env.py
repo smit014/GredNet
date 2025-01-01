@@ -7,6 +7,8 @@ from alembic import context
 
 from database.database import Base
 from src.resource.user.model import User
+from src.resource.admin.model import Data, OTP
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
