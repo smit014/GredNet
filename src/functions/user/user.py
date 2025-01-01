@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Annotated
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
@@ -12,19 +12,24 @@ from sqlalchemy.exc import SQLAlchemyError
 
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl="/login")
 
+
 def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
     """
     Decode the JWT token and return user details (email, phone_no, etc.) if valid.
     """
     try:
+        breakpoint()
         # Decode the token
-        payload = jwt.decode(token, Config.JWT_SECRET_KEY, algorithms=[Config.ALGORITHM])
-        
+        payload = jwt.decode(
+            token, Config.JWT_SECRET_KEY, algorithms=[Config.ALGORITHM]
+        )
+
         # Extract user details from the token
         id: str = payload.get("sub")
         name: str = payload.get("name")
         email: str = payload.get("email")
         phone_no: str = payload.get("phone_no")
+        role: str = payload.get("role")
 
         # Validate that all required fields are present
         if not id or not email or not phone_no:
@@ -34,22 +39,27 @@ def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
                     "status": False,
                     "code": 401,
                     "message": "Invalid token: Missing required user information.",
-                    "data":{}
-                }
+                    "data": {},
+                },
             )
 
         # Return success response with user details
-        return JSONResponse({
-            "status": "Success",
-            "code": 200,
-            "message": "Current user details.",
-            "data": {
-                "id": id,
-                "name": name,
-                "email": email,
-                "phone_no": phone_no
+        return (
+            {
+                "status": "Success",
+                "code": 200,
+                "message": "Current user details.",
+                "data": {
+                    "user": {
+                        "id": id,
+                        "name": name,
+                        "email": email,
+                        "phone_no": phone_no,
+                        "role":role,
+                    }
+                },
             }
-        })
+        )
 
     except JWTError as e:
         return JSONResponse(
@@ -58,10 +68,19 @@ def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
                 "status": False,
                 "code": 401,
                 "message": f"Token validation error: {str(e)}",
-                "data":{}
-            }
+                "data": {},
+            },
         )
-
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": False,
+                "code": 500,
+                "message": f"Unexpected error: {str(e)}",
+                "data": {},
+            },
+        )
 
 
 def update_user_details(user_data, user_id, db: Session):
@@ -69,7 +88,7 @@ def update_user_details(user_data, user_id, db: Session):
     Function to update user details in the database.
     """
     try:
-        id =user_id.get("data")
+        id = user_id.get("data")
         user = (
             db.query(User)
             .filter_by(id=id.get("id"), is_active=True, is_deleted=False)
@@ -82,8 +101,8 @@ def update_user_details(user_data, user_id, db: Session):
                     "status": False,
                     "code": 404,
                     "message": "User not found",
-                    "data":{}
-                }
+                    "data": {},
+                },
             )
 
         # Update user details if provided
@@ -91,8 +110,7 @@ def update_user_details(user_data, user_id, db: Session):
             user.name = user_data.name
         if user_data.phone_no is not None:
             user.phone_no = user_data.phone_no
-        if user_data.address is not None:
-            user.address = user_data.address
+
 
         user.updated_at = datetime.now()  # Set updated timestamp
         db.commit()
@@ -105,14 +123,16 @@ def update_user_details(user_data, user_id, db: Session):
                 "code": 200,
                 "message": "User updated successfully",
                 "data": {
-                    "id": user.id,
-                    "name": user.name,
-                    "email": user.email,
-                    "phone_no": user.phone_no,
-                    "address": user.address,
-                    "updated_at": user.updated_at.isoformat()
-                }
-            }
+                    "user": {
+                        "id": user.id,
+                        "name": user.name,
+                        "email": user.email,
+                        "phone_no": user.phone_no,
+                        "role": user.role,
+                        "updated_at": user.updated_at.isoformat(),
+                    }
+                },
+            },
         )
     except SQLAlchemyError as e:
         db.rollback()  # Rollback transaction in case of an error
@@ -122,10 +142,19 @@ def update_user_details(user_data, user_id, db: Session):
                 "status": False,
                 "code": 500,
                 "message": f"Database error: {str(e)}",
-                "data":{}
-            }
+                "data": {},
+            },
         )
-
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": False,
+                "code": 500,
+                "message": f"Unexpected error: {str(e)}",
+                "data": {},
+            },
+        )
 
 
 def delete_user(user_id: str, current_user: dict, db: Session):
@@ -142,8 +171,8 @@ def delete_user(user_id: str, current_user: dict, db: Session):
                     "status": False,
                     "code": 403,
                     "message": "Unauthorized action",
-                    "data":{}
-                }
+                    "data": {},
+                },
             )
 
         # Query for the user
@@ -160,8 +189,8 @@ def delete_user(user_id: str, current_user: dict, db: Session):
                     "status": False,
                     "code": 404,
                     "message": "User not found",
-                    "data":{}
-                }
+                    "data": {},
+                },
             )
 
         # Soft delete the user
@@ -178,13 +207,15 @@ def delete_user(user_id: str, current_user: dict, db: Session):
                 "code": 200,
                 "message": "User deleted successfully",
                 "data": {
-                    "id": user_data.id,
-                    "name": user_data.name,
-                    "email": user_data.email,
-                    "phone_no": user_data.phone_no,
-                    "updated_at": user_data.updated_at.isoformat()
-                }
-            }
+                    "user": {
+                        "id": user_data.id,
+                        "name": user_data.name,
+                        "email": user_data.email,
+                        "phone_no": user_data.phone_no,
+                        "updated_at": user_data.updated_at.isoformat(),
+                    }
+                },
+            },
         )
     except SQLAlchemyError as e:
         db.rollback()  # Rollback transaction on failure
@@ -194,6 +225,16 @@ def delete_user(user_id: str, current_user: dict, db: Session):
                 "status": False,
                 "code": 500,
                 "message": f"Database error: {str(e)}",
-                "data":{}
-            }
+                "data": {},
+            },
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": False,
+                "code": 500,
+                "message": f"Unexpected error: {str(e)}",
+                "data": {},
+            },
         )
